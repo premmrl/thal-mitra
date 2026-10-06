@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from google import genai
 
 # १. पेज कॉन्फिगरेशन
@@ -64,7 +65,7 @@ LOCALIZATION = {
         "thinking": "थॅलेसेमिया मित्र माहिती पडताळत आहे...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "संयुक्त उपक्रम: <b>विघ्नहर्ता गोल्ड फाउंडेशन</b> आणि <b>Rotary Club of Pune Amanora</b><br>अधिकृत माहितीसाठी भेट द्या: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️ ही माहिती केवळ जनजागृती आणि शिक्षणासाठी आहे. वैद्यकीय सल्ल्यासाठी तज्ज्ञ डॉक्टरांचा (Hematologist) सल्ला घ्यावा."
+        "disclaimer": "⚠️️ ही माहिती केवळ जनजागृती आणि शिक्षणासाठी आहे. वैद्यकीय सल्ल्यासाठी तज्ज्ञ डॉक्टरांचा (Hematologist) सल्ला घ्यावा."
     },
     "हिंदी": {
         "badge": "🎯 मिशन थैलेसीमिया मुक्त भारत 2035",
@@ -250,16 +251,33 @@ def init_genai_client(key):
 
 client = init_genai_client(api_token)
 
-# ८. Google चे अधिकृत चालू मॉडेल (gemini-3.8-flash)
+# ८. AI सारथी प्रमाणे स्वयंचलित रीट्राय व सर्व्हर ओव्हरलोड हाताळणी
 def ask_thal_mitra(query):
     prompt_with_context = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {query}"
-    response = client.models.generate_content(
-        model="gemini-3.8-flash",
-        contents=prompt_with_context
-    )
-    if response and response.text:
-        return response.text
-    raise Exception("मॉडेलकडून कोणताही प्रतिसाद मिळाला नाही.")
+    
+    # गुगल सर्व्हर व्यस्त (503) असल्यास आपोआप पुन्हा प्रयत्न करणे
+    models_to_try = ["gemini-3.8-flash"]
+    
+    for model_name in models_to_try:
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_with_context
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                err_msg = str(e)
+                # 503 किंवा तात्पुरती अडचण असल्यास १-२ सेकंद थांबून पुन्हा प्रयत्न
+                if ("503" in err_msg or "UNAVAILABLE" in err_msg) and attempt < 2:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                # शेवटचा प्रयत्न निष्फळ ठरल्यास एरर पुढे पाठवणे
+                if attempt == 2:
+                    raise e
+                    
+    raise Exception("गुगल सर्व्हर सध्या अत्यंत व्यस्त आहे. कृपया काही सेकंदांनी पुन्हा प्रयत्न करा.")
 
 # ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:

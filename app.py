@@ -1,5 +1,5 @@
 import streamlit as st
-from google import genai
+import google.generativeai as genai
 
 # १. पेज कॉन्फिगरेशन
 st.set_page_config(
@@ -49,7 +49,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ३. सर्व १० भाषांचे संपूर्ण स्थानिक भाषांतर
+# ३. सर्व १० भाषांसाठी संपूर्ण स्थानिक भाषांतर
 LOCALIZATION = {
     "मराठी": {
         "badge": "🎯 मिशन थॅलेसेमिया मुक्त भारत २०३५",
@@ -94,7 +94,7 @@ LOCALIZATION = {
         "thinking": "ThalMitra is finding accurate facts...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "Joint Initiative: <b>Vighnaharta Gold Foundation</b> & <b>Rotary Club of Pune Amanora</b><br>Official Portal: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
+        "disclaimer": "⚠️️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
     },
     "ગુજરાતી (Gujarati)": {
         "badge": "🎯 મિશન થેલેસેમિયા મુક્ત ભારત ૨૦૩૫",
@@ -123,7 +123,7 @@ LOCALIZATION = {
         "input_placeholder": "ಥಲಸ್ಸೆಮಿಯಾ ಅಥವಾ ರಕ್ತ ಪರೀಕ್ಷೆಯ ಬಗ್ಗೆ ಕೇಳಿ...",
         "thinking": "ಥಲಸ್ಸೆಮಿಯಾ ಮಿತ್ರ ಪರಿಶೀಲಿಸುತ್ತಿದ್ದಾರೆ...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
-        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
+        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ಈ ಮಾಹಿತಿಯು ಕೇವಲ ಜಾಗೃತಿಗಾಗಿ ಮಾತ್ರ. ವೈದ್ಯಕೀಯ ಸಲಹೆಗಾಗಿ ತಜ್ಞ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ."
     },
     "తెలుగు (Telugu)": {
@@ -230,7 +230,7 @@ system_prompt = (
     "तू 'थॅलेसेमिया मित्र' (ThalMitra AI) आहेस - एक संवेदनशील, वैज्ञानिक आणि विश्वासू डिजिटल समुपदेशक. "
     "हा उपक्रम 'विघ्नहर्ता गोल्ड फाउंडेशन' आणि 'Rotary Club of Pune Amanora' यांच्या 'मिशन थॅलेसेमिया मुक्त भारत २०३५' अंतर्गत चालवला जात आहे. "
     f"सध्या निवडलेली भाषा: {language}. सध्या निवडलेला विभाग: {selected_mode}. "
-    f"महत्त्वाचे वैज्ञानिक नियम: "
+    "महत्त्वाचे वैज्ञानिक नियम: "
     f"१. संपूर्ण उत्तर १००% शुद्ध व सहज समजणाऱ्या {language} भाषेतच दे. "
     "२. आदरार्थी, संवेदनशील आणि मित्रासारखी स्पष्ट भाषा वापर. "
     "३. वैज्ञानिक तथ्ये: थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती सामान्य, निरोगी आयुष्य जगू शकते आणि लग्न करू शकते. "
@@ -239,18 +239,15 @@ system_prompt = (
     "४. अधिकृत संकेतस्थळ: अधिक माहितीसाठी thalassemia.rcpamanora.org चा आवर्जून उल्लेख कर."
 )
 
-# ७. क्लायंट इनिशियलायझेशन
-token_str = st.secrets.get("GEMINI_API_KEY", "").strip()
+# ७. API कॉन्फिगरेशन
+api_token = st.secrets.get("GEMINI_API_KEY", "").strip()
 
-if not token_str:
+if not api_token:
     st.info("कृपया Streamlit Secrets मध्ये GEMINI_API_KEY जोडा.", icon="ℹ️")
     st.stop()
 
-@st.cache_resource(show_spinner=False)
-def get_client(tok):
-    return genai.Client(api_key=tok)
-
-client = get_client(token_str)
+# गुगल API थेट कॉन्फिगरेशन
+genai.configure(api_key=api_token)
 
 # ८. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
@@ -269,11 +266,14 @@ if user_prompt := st.chat_input(content["input_placeholder"]):
     with st.chat_message("assistant"):
         with st.spinner(content["thinking"]):
             try:
-                full_input = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=full_input
+                # मोफत व स्थिर मॉडेल
+                model = genai.GenerativeModel(
+                    model_name="gemini-1.5-flash",
+                    system_instruction=system_prompt
                 )
+                full_input = f"[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
+                response = model.generate_content(full_input)
+                
                 if response and response.text:
                     st.markdown(response.text)
                     st.session_state.thal_messages.append({"role": "assistant", "content": response.text})

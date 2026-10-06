@@ -1,6 +1,5 @@
 import streamlit as st
 from google import genai
-from google.genai import types
 
 # १. पेज कॉन्फिगरेशन
 st.set_page_config(
@@ -9,48 +8,48 @@ st.set_page_config(
     layout="centered"
 )
 
-# २. आधुनिक CSS स्टाईल
+# २. CSS स्टाईल
 st.markdown("""
-<style>
-.footer-container {
-    text-align: center;
-    margin-top: 45px;
-    padding-top: 18px;
-    border-top: 1px solid #333333;
-}
-.brand-title {
-    font-size: 13px;
-    color: #ff4b4b;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-.footer-text {
-    color: #aaaaaa;
-    font-size: 12px;
-    margin-top: 5px;
-    line-height: 1.6;
-}
-.mission-badge {
-    display: inline-block;
-    background: #2b0000;
-    color: #ff6b6b;
-    border: 1px solid #ff4b4b;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-.stRadio > div {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-}
-</style>
+    <style>
+    .footer-container {
+        text-align: center;
+        margin-top: 45px;
+        padding-top: 18px;
+        border-top: 1px solid #333333;
+    }
+    .brand-title {
+        font-size: 13px;
+        color: #ff4b4b;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .footer-text {
+        color: #aaaaaa;
+        font-size: 12px;
+        margin-top: 5px;
+        line-height: 1.6;
+    }
+    .mission-badge {
+        display: inline-block;
+        background: #2b0000;
+        color: #ff6b6b;
+        border: 1px solid #ff4b4b;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .stRadio > div {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# ३. सर्व १० भाषांसाठी संपूर्ण स्थानिक भाषांतर
+# ३. सर्व १० भाषांचे संपूर्ण स्थानिक भाषांतर
 LOCALIZATION = {
     "मराठी": {
         "badge": "🎯 मिशन थॅलेसेमिया मुक्त भारत २०३५",
@@ -226,16 +225,68 @@ selected_mode = st.radio(
     label_visibility="collapsed"
 )
 
-# ६. सिस्टीम प्रॉम्ट
-SYSTEM_INSTRUCTION = f"""
-तू 'थॅलेसेमिया मित्र' (ThalMitra AI) आहेस - एक संवेदनशील, वैज्ञानिक आणि विश्वासू डिजिटल समुपदेशक.
-हा उपक्रम 'विघ्नहर्ता गोल्ड फाउंडेशन' आणि 'Rotary Club of Pune Amanora' यांच्या 'मिशन थॅलेसेमिया मुक्त भारत २०३५' अंतर्गत चालवला जात आहे.
+# ६. सिस्टीम सूचना
+system_prompt = (
+    "तू 'थॅलेसेमिया मित्र' (ThalMitra AI) आहेस - एक संवेदनशील, वैज्ञानिक आणि विश्वासू डिजिटल समुपदेशक. "
+    "हा उपक्रम 'विघ्नहर्ता गोल्ड फाउंडेशन' आणि 'Rotary Club of Pune Amanora' यांच्या 'मिशन थॅलेसेमिया मुक्त भारत २०३५' अंतर्गत चालवला जात आहे. "
+    f"सध्या निवडलेली भाषा: {language}. सध्या निवडलेला विभाग: {selected_mode}. "
+    f"महत्त्वाचे वैज्ञानिक नियम: "
+    f"१. संपूर्ण उत्तर १००% शुद्ध व सहज समजणाऱ्या {language} भाषेतच दे. "
+    "२. आदरार्थी, संवेदनशील आणि मित्रासारखी स्पष्ट भाषा वापर. "
+    "३. वैज्ञानिक तथ्ये: थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती सामान्य, निरोगी आयुष्य जगू शकते आणि लग्न करू शकते. "
+    "केवळ दोन मायनर व्यक्तींचे लग्न झाल्यास बाळाला २५% मेजर (गंभीर आजार) होण्याचा धोका असतो. "
+    "लग्नाआधी प्रत्येकाने CBC (यात MCV < 80, MCH < 27) आणि Hb Electrophoresis / HPLC टेस्ट करावी. "
+    "४. अधिकृत संकेतस्थळ: अधिक माहितीसाठी thalassemia.rcpamanora.org चा आवर्जून उल्लेख कर."
+)
 
-सध्या निवडलेली भाषा: {language}
-सध्या निवडलेला विभाग: {selected_mode}
+# ७. क्लायंट इनिशियलायझेशन
+token_str = st.secrets.get("GEMINI_API_KEY", "").strip()
 
-महत्त्वाचे वैज्ञानिक नियम:
-१. संपूर्ण उत्तर १००% शुद्ध व सहज समजणाऱ्या {language} भाषेतच दे.
-२. आदरार्थी, संवेदनशील आणि मित्रासारखी स्पष्ट भाषा वापर.
-३. वैज्ञानिक तथ्ये:
-   - थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती सामान्य, निर
+if not token_str:
+    st.info("कृपया Streamlit Secrets मध्ये GEMINI_API_KEY जोडा.", icon="ℹ️")
+    st.stop()
+
+@st.cache_resource(show_spinner=False)
+def get_client(tok):
+    return genai.Client(api_key=tok)
+
+client = get_client(token_str)
+
+# ८. चॅट हिस्ट्री
+if "thal_messages" not in st.session_state:
+    st.session_state.thal_messages = []
+
+for message in st.session_state.thal_messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# ९. प्रश्न हाताळणी
+if user_prompt := st.chat_input(content["input_placeholder"]):
+    st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
+    with st.chat_message("user"):
+        st.markdown(user_prompt)
+
+    with st.chat_message("assistant"):
+        with st.spinner(content["thinking"]):
+            try:
+                full_input = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=full_input
+                )
+                if response and response.text:
+                    st.markdown(response.text)
+                    st.session_state.thal_messages.append({"role": "assistant", "content": response.text})
+                else:
+                    st.error("उत्तर मिळण्यात अडचण आली, कृपया पुन्हा विचारून पहा.")
+            except Exception as e:
+                st.error(f"तांत्रिक अडचण: {str(e)}")
+
+# १०. तळटीप ब्रँडिंग व अस्वीकरण
+st.markdown(f"""
+    <div class='footer-container'>
+        <div class='brand-title'>{content["brand_title"]}</div>
+        <div class='footer-text'>{content["brand_desc"]}</div>
+        <div style='font-size: 11px; color: #777777; margin-top: 10px;'>{content["disclaimer"]}</div>
+    </div>
+""", unsafe_allow_html=True)

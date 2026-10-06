@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# २. आधुनिक CSS स्टाईल (रेड-गोल्ड जनजागृती थीम)
+# २. आधुनिक CSS स्टाईल
 st.markdown("""
     <style>
     .footer-container {
@@ -50,7 +50,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ३. सर्व १० भाषांसाठी संपूर्ण स्थानिक भाषांतर
+# ३. सर्व १० भाषांचे संपूर्ण स्थानिक भाषांतर
 LOCALIZATION = {
     "मराठी": {
         "badge": "🎯 मिशन थॅलेसेमिया मुक्त भारत २०३५",
@@ -244,28 +244,15 @@ SYSTEM_INSTRUCTION = f"""
 ४. अधिकृत संकेतस्थळ: अधिक माहितीसाठी thalassemia.rcpamanora.org चा आवर्जून उल्लेख कर.
 """
 
-# ७. API Key / OAuth Token मिळवणे
-api_token = st.secrets.get("GEMINI_API_KEY", "").strip()
+# ७. टोकन मिळवणे
+raw_token = st.secrets.get("GEMINI_API_KEY", "").strip()
 
-if not api_token:
+if not raw_token:
     st.info("कृपया Streamlit Secrets मध्ये API Key जोडा.", icon="ℹ️")
     st.stop()
 
-# ८. AQ आणि Bearer Token थेट चालवणारे API फंक्शन
+# ८. ऑथेंटिकेशन व कॉल फंक्शन (Google AI आणि Vertex AI दोघांना सपोर्ट करणारे)
 def generate_response(prompt_text):
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-    
-    # जर की AQ ने सुरू होत असेल तर Bearer Token म्हणून पाठवा, अन्यथा API Key पॅरामीटर
-    if api_token.startswith("AQ.") or api_token.startswith("ya29."):
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_token}"
-        }
-        endpoint = url
-    else:
-        headers = {"Content-Type": "application/json"}
-        endpoint = f"{url}?key={api_token}"
-        
     payload = {
         "contents": [
             {
@@ -276,18 +263,36 @@ def generate_response(prompt_text):
         ]
     }
     
-    res = requests.post(endpoint, headers=headers, json=payload, timeout=40)
+    # पर्याय १: थेट Google AI Studio Key असल्यास
+    if not (raw_token.startswith("AQ.") or raw_token.startswith("ya29.")):
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={raw_token}"
+        res = requests.post(url, json=payload, timeout=35)
+        if res.status_code == 200:
+            return res.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+    # पर्याय २: AQ / OAuth टोकन असल्यास (Google Cloud Developer Endpoint)
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {raw_token}",
+        "x-goog-user-project": "gen-lang-client-0305886475"
+    }
     
-    if res.status_code == 200:
-        data = res.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"]
-    else:
-        try:
-            err_data = res.json()
-            err_msg = err_data.get("error", {}).get("message", res.text)
-        except Exception:
-            err_msg = res.text
-        raise Exception(f"त्रुटी ({res.status_code}): {err_msg}")
+    endpoints = [
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
+    ]
+    
+    last_err = ""
+    for ep in endpoints:
+        res = requests.post(ep, headers=headers, json=payload, timeout=35)
+        if res.status_code == 200:
+            data = res.json()
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            last_err = res.text
+
+    # जर गुगलचे क्लाउड टोकन एक्सपायर झाले असेल तर मार्गदर्शन
+    raise Exception(f"Google Token प्रमाणीकरण त्रुटी. कृपया टोकन ताजे असल्याची खात्री करा: {last_err}")
 
 # ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
@@ -317,6 +322,4 @@ st.markdown(f"""
     <div class='footer-container'>
         <div class='brand-title'>{content["brand_title"]}</div>
         <div class='footer-text'>{content["brand_desc"]}</div>
-        <div style='font-size: 11px; color: #777777; margin-top: 10px;'>{content["disclaimer"]}</div>
-    </div>
-""", unsafe_allow_html=True)
+        <div style='font-size: 11px; color: #777777; margin-top:

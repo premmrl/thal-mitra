@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 from google import genai
 
 # १. पेज कॉन्फिगरेशन
@@ -62,10 +61,9 @@ LOCALIZATION = {
             "💡 गैरसमज विरुद्ध सत्य (Myth Busters)"
         ],
         "input_placeholder": "थॅलेसेमिया, रक्ताची चाचणी किंवा लग्नाआधीच्या तपासणीबाबत विचारा...",
-        "thinking": "थॅलेसेमिया मित्र माहिती पडताळत आहे...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "संयुक्त उपक्रम: <b>विघ्नहर्ता गोल्ड फाउंडेशन</b> आणि <b>Rotary Club of Pune Amanora</b><br>अधिकृत माहितीसाठी भेट द्या: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️️ ही माहिती केवळ जनजागृती आणि शिक्षणासाठी आहे. वैद्यकीय सल्ल्यासाठी तज्ज्ञ डॉक्टरांचा (Hematologist) सल्ला घ्यावा."
+        "disclaimer": "⚠️ ही माहिती केवळ जनजागृती आणि शिक्षणासाठी आहे. वैद्यकीय सल्ल्यासाठी तज्ज्ञ डॉक्टरांचा (Hematologist) सल्ला घ्यावा."
     },
     "हिंदी": {
         "badge": "🎯 मिशन थैलेसीमिया मुक्त भारत 2035",
@@ -77,7 +75,6 @@ LOCALIZATION = {
             "💡 भ्रम बनाम सच (Myth Busters)"
         ],
         "input_placeholder": "थैलेसीमिया, ब्लड टेस्ट या शादी से पहले की जांच के बारे में पूछें...",
-        "thinking": "थैलेसीमिया मित्र जानकारी जुटा रहे हैं...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "संयुक्त पहल: <b>विघ्नहर्ता गोल्ड फाउंडेशन</b> एवं <b>Rotary Club of Pune Amanora</b><br>वेबसाइट: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ यह जानकारी केवल जागरूकता के लिए है। चिकित्सकीय सलाह हेतु डॉक्टर से संपर्क करें।"
@@ -92,7 +89,6 @@ LOCALIZATION = {
             "💡 Myth Busters & FAQs"
         ],
         "input_placeholder": "Ask about Thalassemia Minor/Major, tests, or pre-marital screening...",
-        "thinking": "ThalMitra is finding accurate facts...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "Joint Initiative: <b>Vighnaharta Gold Foundation</b> & <b>Rotary Club of Pune Amanora</b><br>Official Portal: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
@@ -107,7 +103,6 @@ LOCALIZATION = {
             "💡 ગેરમાન્યતાઓ અને સત્ય (Myth Busters)"
         ],
         "input_placeholder": "થેલેસેમિયા, બ્લડ ટેસ્ટ કે લગ્ન પહેલાંની તપાસ વિશે પૂછો...",
-        "thinking": "થેલેસેમિયા મિત્ર માહિતી તપાસી રહ્યા છે...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "સંયુક્ત પહેલ: <b>વિઘ્નહર્તા ગોલ્ડ ફાઉન્ડેશન</b> અને <b>Rotary Club of Pune Amanora</b><br>વેબસાઇટ: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ આ માહિતી માત્ર જાગૃતિ અને શિક્ષણ માટે છે. તબીબી સલાહ માટે નિષ્ણાત ડૉક્ટરનો સંપર્ક કરવો."
@@ -122,9 +117,8 @@ LOCALIZATION = {
             "💡 ತಪ್ಪು ಕಲ್ಪನೆಗಳು ಮತ್ತು ಸತ್ಯ (Myth Busters)"
         ],
         "input_placeholder": "ಥಲಸ್ಸೆಮಿಯಾ ಅಥವಾ ರಕ್ತ ಪರೀಕ್ಷೆಯ ಬಗ್ಗೆ ಕೇಳಿ...",
-        "thinking": "ಥಲಸ್ಸೆಮಿಯಾ ಮಿತ್ರ ಪರಿಶೀಲಿಸುತ್ತಿದ್ದಾರೆ...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
-        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
+        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ಈ ಮಾಹಿತಿಯು ಕೇವಲ ಜಾಗೃತಿಗಾಗಿ ಮಾತ್ರ. ವೈದ್ಯಕೀಯ ಸಲಹೆಗಾಗಿ ತಜ್ಞ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ."
     },
     "తెలుగు (Telugu)": {
@@ -137,7 +131,6 @@ LOCALIZATION = {
             "💡 అపోహలు vs నిజాలు (Myth Busters)"
         ],
         "input_placeholder": "థలస్సేమియా లేదా రక్త పరీక్షల గురించి అడగండి...",
-        "thinking": "థలస్సేమియా మిత్ర సమాచారం సేకరిస్తున్నారు...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "సంయుక్త చొరవ: <b>విఘ్నహర్త గోల్డ్ ఫౌండేషన్</b> & <b>Rotary Club of Pune Amanora</b><br>వెబ్‌సైట్: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ఈ సమాచారం అవగాహన కోసం మాత్రమే. వైద్య సలహా కోసం నిపుణులైన వైద్యుడిని సంప్రదించండి."
@@ -152,7 +145,6 @@ LOCALIZATION = {
             "💡 மூடநம்பிக்கைகளும் உண்மைகளும்"
         ],
         "input_placeholder": "தலசீமியா அல்லது இரத்த பரிசோதனை பற்றி கேளுங்கள்...",
-        "thinking": "தலசீமியா மித்ரா விவரங்களை சரிபார்க்கிறது...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "கூட்டு முயற்சி: <b>விக்னஹர்த்தா கோல்ட் ஃபவுண்டேஷன்</b> & <b>Rotary Club of Pune Amanora</b><br>இணையதளம்: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ இந்தத் தகவல் விழிப்புணர்வுக்காக மட்டுமே. மருத்துவ ஆலோசனைக்கு மருத்துவரை அணுகவும்."
@@ -167,7 +159,6 @@ LOCALIZATION = {
             "💡 ভ্রান্ত ধারণা বনাম সত্য (Myth Busters)"
         ],
         "input_placeholder": "থ্যালাসেমিয়া বা রক্তের পরীক্ষা সম্পর্কে জিজ্ঞাসা করুন...",
-        "thinking": "থ্যালাসেমিয়া মিত্র তথ্য সংগ্রহ করছে...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "যৌথ উদ্যোগ: <b>বিঘ্নহর্তা গোল্ড ফাউন্ডেশন</b> ও <b>Rotary Club of Pune Amanora</b><br>ওয়েবসাইট: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ এই তথ্যটি শুধুমাত্র সচেতনতার জন্য। চিকিৎসার জন্য ডাক্তারের পরামর্শ নিন।"
@@ -182,7 +173,6 @@ LOCALIZATION = {
             "💡 മിഥ്യകളും യാഥാർത്ഥ്യങ്ങളും (Myth Busters)"
         ],
         "input_placeholder": "തലസീമിയ അല്ലെങ്കിൽ രക്തപരിശോധനയെക്കുറിച്ച് ചോദിക്കുക...",
-        "thinking": "തലസീമിയ മിത്ര വിവരങ്ങൾ ശേഖരിക്കുന്നു...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "സംയുക്ത സംരംഭം: <b>വിഘ്നഹർത്ത ഗോൾഡ് ഫൗണ്ടേഷൻ</b> & <b>Rotary Club of Pune Amanora</b><br>വെബ്സൈറ്റ്: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ഈ വിവരങ്ങൾ അവബോധത്തിന് മാത്രമുള്ളതാണ്. വൈദ്യോപദേശത്തിനായി ഡോക്ടറെ സമീപിക്കുക."
@@ -197,7 +187,6 @@ LOCALIZATION = {
             "💡 ਵਹਿਮ ਬਨਾਮ ਸੱਚ (Myth Busters)"
         ],
         "input_placeholder": "ਥੈਲੇਸੀਮੀਆ ਜਾਂ ਖੂਨ ਦੇ ਟੈਸਟ ਬਾਰੇ ਪੁੱਛੋ...",
-        "thinking": "ਥੈਲੇਸੀਮੀਆ ਮਿੱਤਰ ਜਾਣਕਾਰੀ ਇਕੱਠੀ ਕਰ ਰਹੇ ਹਨ...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "ਸਾਂਝਾ ਉਪਰਾਲਾ: <b>ਵਿਘਨਹਰਤਾ ਗੋਲਡ ਫਾਊਂਡੇਸ਼ਨ</b> ਅਤੇ <b>Rotary Club of Pune Amanora</b><br>ਵੈੱਬਸਾਈਟ: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ਇਹ ਜਾਣਕਾਰੀ ਸਿਰਫ਼ ਜਾਗਰੂਕਤਾ ਲਈ ਹੈ। ਡਾਕਟਰੀ ਸਲਾਹ ਲਈ ਮਾਹਿਰ ਡਾਕਟਰ ਨਾਲ ਸੰਪਰਕ ਕਰੋ।"
@@ -251,33 +240,16 @@ def init_genai_client(key):
 
 client = init_genai_client(api_token)
 
-# ८. AI सारथी प्रमाणे स्वयंचलित रीट्राय व सर्व्हर ओव्हरलोड हाताळणी
-def ask_thal_mitra(query):
+# ८. वेगाने स्ट्रीमिंग करून उत्तर देणे
+def stream_thal_mitra(query):
     prompt_with_context = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {query}"
-    
-    # गुगल सर्व्हर व्यस्त (503) असल्यास आपोआप पुन्हा प्रयत्न करणे
-    models_to_try = ["gemini-3.8-flash"]
-    
-    for model_name in models_to_try:
-        for attempt in range(3):
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=prompt_with_context
-                )
-                if response and response.text:
-                    return response.text
-            except Exception as e:
-                err_msg = str(e)
-                # 503 किंवा तात्पुरती अडचण असल्यास १-२ सेकंद थांबून पुन्हा प्रयत्न
-                if ("503" in err_msg or "UNAVAILABLE" in err_msg) and attempt < 2:
-                    time.sleep(1.5 * (attempt + 1))
-                    continue
-                # शेवटचा प्रयत्न निष्फळ ठरल्यास एरर पुढे पाठवणे
-                if attempt == 2:
-                    raise e
-                    
-    raise Exception("गुगल सर्व्हर सध्या अत्यंत व्यस्त आहे. कृपया काही सेकंदांनी पुन्हा प्रयत्न करा.")
+    response_stream = client.models.generate_content_stream(
+        model="gemini-3.8-flash",
+        contents=prompt_with_context
+    )
+    for chunk in response_stream:
+        if chunk.text:
+            yield chunk.text
 
 # ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
@@ -287,20 +259,18 @@ for message in st.session_state.thal_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# १०. प्रश्न हाताळणी
+# १०. थेट व तात्काळ प्रतिसाद हाताळणी
 if user_prompt := st.chat_input(content["input_placeholder"]):
     st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner(content["thinking"]):
-            try:
-                reply = ask_thal_mitra(user_prompt)
-                st.markdown(reply)
-                st.session_state.thal_messages.append({"role": "assistant", "content": reply})
-            except Exception as e:
-                st.error(f"तांत्रिक अडचण: {str(e)}")
+        try:
+            full_response = st.write_stream(stream_thal_mitra(user_prompt))
+            st.session_state.thal_messages.append({"role": "assistant", "content": full_response})
+        except Exception as e:
+            st.error(f"तांत्रिक अडचण: {str(e)}")
 
 # ११. तळटीप ब्रँडिंग व अस्वीकरण
 st.markdown(f"""

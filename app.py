@@ -1,6 +1,6 @@
 import streamlit as st
-import requests
-import json
+from google import genai
+from google.genai import types
 
 # १. पेज कॉन्फिगरेशन
 st.set_page_config(
@@ -11,46 +11,46 @@ st.set_page_config(
 
 # २. आधुनिक CSS स्टाईल
 st.markdown("""
-    <style>
-    .footer-container {
-        text-align: center;
-        margin-top: 45px;
-        padding-top: 18px;
-        border-top: 1px solid #333333;
-    }
-    .brand-title {
-        font-size: 13px;
-        color: #ff4b4b;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-    }
-    .footer-text {
-        color: #aaaaaa;
-        font-size: 12px;
-        margin-top: 5px;
-        line-height: 1.6;
-    }
-    .mission-badge {
-        display: inline-block;
-        background: #2b0000;
-        color: #ff6b6b;
-        border: 1px solid #ff4b4b;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-    .stRadio > div {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-    }
-    </style>
+<style>
+.footer-container {
+    text-align: center;
+    margin-top: 45px;
+    padding-top: 18px;
+    border-top: 1px solid #333333;
+}
+.brand-title {
+    font-size: 13px;
+    color: #ff4b4b;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.footer-text {
+    color: #aaaaaa;
+    font-size: 12px;
+    margin-top: 5px;
+    line-height: 1.6;
+}
+.mission-badge {
+    display: inline-block;
+    background: #2b0000;
+    color: #ff6b6b;
+    border: 1px solid #ff4b4b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.stRadio > div {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# ३. सर्व १० भाषांचे संपूर्ण स्थानिक भाषांतर
+# ३. सर्व १० भाषांसाठी संपूर्ण स्थानिक भाषांतर
 LOCALIZATION = {
     "मराठी": {
         "badge": "🎯 मिशन थॅलेसेमिया मुक्त भारत २०३५",
@@ -238,88 +238,4 @@ SYSTEM_INSTRUCTION = f"""
 १. संपूर्ण उत्तर १००% शुद्ध व सहज समजणाऱ्या {language} भाषेतच दे.
 २. आदरार्थी, संवेदनशील आणि मित्रासारखी स्पष्ट भाषा वापर.
 ३. वैज्ञानिक तथ्ये:
-   - थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती सामान्य, निरोगी आयुष्य जगू शकते आणि लग्न करू शकते.
-   - केवळ दोन मायनर व्यक्तींचे लग्न झाल्यास बाळाला २५% मेजर (गंभीर आजार) होण्याचा धोका असतो.
-   - लग्नाआधी प्रत्येकाने CBC (यात MCV < 80, MCH < 27) आणि Hb Electrophoresis / HPLC टेस्ट करावी.
-४. अधिकृत संकेतस्थळ: अधिक माहितीसाठी thalassemia.rcpamanora.org चा आवर्जून उल्लेख कर.
-"""
-
-# ७. टोकन मिळवणे
-raw_token = st.secrets.get("GEMINI_API_KEY", "").strip()
-
-if not raw_token:
-    st.info("कृपया Streamlit Secrets मध्ये API Key जोडा.", icon="ℹ️")
-    st.stop()
-
-# ८. ऑथेंटिकेशन व कॉल फंक्शन (Google AI आणि Vertex AI दोघांना सपोर्ट करणारे)
-def generate_response(prompt_text):
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{SYSTEM_INSTRUCTION}\n\n[विभाग: {selected_mode}]\nप्रश्न: {prompt_text}"}
-                ]
-            }
-        ]
-    }
-    
-    # पर्याय १: थेट Google AI Studio Key असल्यास
-    if not (raw_token.startswith("AQ.") or raw_token.startswith("ya29.")):
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={raw_token}"
-        res = requests.post(url, json=payload, timeout=35)
-        if res.status_code == 200:
-            return res.json()["candidates"][0]["content"]["parts"][0]["text"]
-
-    # पर्याय २: AQ / OAuth टोकन असल्यास (Google Cloud Developer Endpoint)
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {raw_token}",
-        "x-goog-user-project": "gen-lang-client-0305886475"
-    }
-    
-    endpoints = [
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
-    ]
-    
-    last_err = ""
-    for ep in endpoints:
-        res = requests.post(ep, headers=headers, json=payload, timeout=35)
-        if res.status_code == 200:
-            data = res.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
-        else:
-            last_err = res.text
-
-    # जर गुगलचे क्लाउड टोकन एक्सपायर झाले असेल तर मार्गदर्शन
-    raise Exception(f"Google Token प्रमाणीकरण त्रुटी. कृपया टोकन ताजे असल्याची खात्री करा: {last_err}")
-
-# ९. चॅट हिस्ट्री
-if "thal_messages" not in st.session_state:
-    st.session_state.thal_messages = []
-
-for message in st.session_state.thal_messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# १०. प्रश्न हाताळणी
-if user_prompt := st.chat_input(content["input_placeholder"]):
-    st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
-    with st.chat_message("user"):
-        st.markdown(user_prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner(content["thinking"]):
-            try:
-                reply = generate_response(user_prompt)
-                st.markdown(reply)
-                st.session_state.thal_messages.append({"role": "assistant", "content": reply})
-            except Exception as e:
-                st.error(f"तांत्रिक अडचण: {str(e)}")
-
-# ११. तळटीप ब्रँडिंग व अस्वीकरण
-st.markdown(f"""
-    <div class='footer-container'>
-        <div class='brand-title'>{content["brand_title"]}</div>
-        <div class='footer-text'>{content["brand_desc"]}</div>
-        <div style='font-size: 11px; color: #777777; margin-top:
+   - थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती सामान्य, निर

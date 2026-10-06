@@ -94,7 +94,7 @@ LOCALIZATION = {
         "thinking": "ThalMitra is finding accurate facts...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "Joint Initiative: <b>Vighnaharta Gold Foundation</b> & <b>Rotary Club of Pune Amanora</b><br>Official Portal: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
+        "disclaimer": "⚠️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
     },
     "ગુજરાતી (Gujarati)": {
         "badge": "🎯 મિશન થેલેસેમિયા મુક્ત ભારત ૨૦૩૫",
@@ -123,7 +123,7 @@ LOCALIZATION = {
         "input_placeholder": "ಥಲಸ್ಸೆಮಿಯಾ ಅಥವಾ ರಕ್ತ ಪರೀಕ್ಷೆಯ ಬಗ್ಗೆ ಕೇಳಿ...",
         "thinking": "ಥಲಸ್ಸೆಮಿಯಾ ಮಿತ್ರ ಪರಿಶೀಲಿಸುತ್ತಿದ್ದಾರೆ...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
-        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
+        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ಈ ಮಾಹಿತಿಯು ಕೇವಲ ಜಾಗೃತಿಗಾಗಿ ಮಾತ್ರ. ವೈದ್ಯಕೀಯ ಸಲಹೆಗಾಗಿ ತಜ್ಞ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ."
     },
     "తెలుగు (Telugu)": {
@@ -205,12 +205,10 @@ LOCALIZATION = {
 
 # ४. भाषा निवड
 LANGUAGES = list(LOCALIZATION.keys())
-
 language = st.selectbox(
     "🌐 Choose Language / भाषा निवडा / अपनी भाषा चुनें:",
     LANGUAGES
 )
-
 content = LOCALIZATION[language]
 
 # ५. UI हेडर
@@ -246,8 +244,32 @@ if not api_token:
     st.info("कृपया Streamlit Secrets मध्ये GEMINI_API_KEY जोडा.", icon="ℹ️")
     st.stop()
 
-# गुगल API थेट कॉन्फिगरेशन
 genai.configure(api_key=api_token)
+
+# उपलब्ध मॉडेल शोधणारे व उत्तर देणारे सुरक्षित फंक्शन
+def call_gemini(user_query):
+    # खात्यावर उपलब्ध असलेली मॉडेल्स क्रमाने तपासून उत्तर मिळवणे
+    candidate_models = [
+        "gemini-pro",
+        "models/gemini-pro",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro-latest"
+    ]
+    
+    full_prompt = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {user_query}"
+    
+    last_error = None
+    for mod in candidate_models:
+        try:
+            m = genai.GenerativeModel(mod)
+            res = m.generate_content(full_prompt)
+            if res and res.text:
+                return res.text
+        except Exception as e:
+            last_error = e
+            continue
+            
+    raise Exception(f"मॉडेल प्रतिसाद देऊ शकले नाही: {str(last_error)}")
 
 # ८. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
@@ -266,19 +288,9 @@ if user_prompt := st.chat_input(content["input_placeholder"]):
     with st.chat_message("assistant"):
         with st.spinner(content["thinking"]):
             try:
-                # मोफत व स्थिर मॉडेल
-                model = genai.GenerativeModel(
-                    model_name="gemini-1.5-flash",
-                    system_instruction=system_prompt
-                )
-                full_input = f"[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
-                response = model.generate_content(full_input)
-                
-                if response and response.text:
-                    st.markdown(response.text)
-                    st.session_state.thal_messages.append({"role": "assistant", "content": response.text})
-                else:
-                    st.error("उत्तर मिळण्यात अडचण आली, कृपया पुन्हा विचारून पहा.")
+                reply = call_gemini(user_prompt)
+                st.markdown(reply)
+                st.session_state.thal_messages.append({"role": "assistant", "content": reply})
             except Exception as e:
                 st.error(f"तांत्रिक अडचण: {str(e)}")
 

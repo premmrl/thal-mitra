@@ -1,6 +1,5 @@
 import streamlit as st
-import time
-from google import genai
+import google.generativeai as genai
 
 # १. पेज कॉन्फिगरेशन
 st.set_page_config(
@@ -83,7 +82,7 @@ LOCALIZATION = {
         "thinking": "थॅलेसेमिया मित्र माहिती पडताळत आहे...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "संयुक्त उपक्रम: <b>विघ्नहर्ता गोल्ड फाउंडेशन</b> आणि <b>Rotary Club of Pune Amanora</b><br>अधिकृत माहितीसाठी भेट द्या: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️ ही माहिती केवळ जनजागृती आणि शिक्षणासाठी आहे. वैद्यकीय सल्ल्यासाठी तज्ज्ञ डॉक्टरांचा (Hematologist) सल्ला घ्यावा."
+        "disclaimer": "⚠️️ ही माहिती केवळ जनजागृती आणि शिक्षणासाठी आहे. वैद्यकीय सल्ल्यासाठी तज्ज्ञ डॉक्टरांचा (Hematologist) सल्ला घ्यावा."
     },
     "हिंदी": {
         "title": "🩸 थैलेसीमिया मित्र (ThalMitra)",
@@ -155,31 +154,20 @@ SYSTEM_INSTRUCTION = f"""
    - तळाशी १ ओळीची सूचना: "अधिकृत माहितीसाठी thalassemia.rcpamanora.org ला भेट द्या."
 """
 
-# ७. API Key आणि Client
+# ७. API Key आणि Client कॉन्फिगरेशन
 api_key = st.secrets.get("GEMINI_API_KEY", None)
 if not api_key:
     st.info("कृपया पुढे जाण्यासाठी API Key आवश्यक आहे.", icon="ℹ️")
     st.stop()
 
-client = genai.Client(api_key=api_key)
+# गुगल जेनेरेटिव्ह AI मॉडेल सेटअप
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=SYSTEM_INSTRUCTION
+)
 
-# ८. डायनॅमिक मॉडेल शोध
-@st.cache_resource(show_spinner=False)
-def get_supported_model_list():
-    try:
-        available = []
-        for m in client.models.list():
-            m_name = m.name.replace("models/", "")
-            if "flash" in m_name or "pro" in m_name:
-                available.append(m_name)
-        if "gemini-3.8-flash" in available:
-            available.remove("gemini-3.8-flash")
-            available.insert(0, "gemini-3.8-flash")
-        return available if available else ["gemini-3.8-flash"]
-    except Exception:
-        return ["gemini-3.8-flash"]
-
-# ९. चॅट हिस्ट्री
+# ८. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
     st.session_state.thal_messages = []
 
@@ -187,7 +175,7 @@ for message in st.session_state.thal_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# १०. प्रश्न हाताळणी
+# ९. प्रश्न हाताळणी
 if user_prompt := st.chat_input(content["input_placeholder"]):
     st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -195,35 +183,19 @@ if user_prompt := st.chat_input(content["input_placeholder"]):
 
     with st.chat_message("assistant"):
         with st.spinner(content["thinking"]):
-            full_prompt = f"{SYSTEM_INSTRUCTION}\n\n[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
-            
-            models_to_try = get_supported_model_list()
-            reply_text = None
-            last_err = ""
-            
-            for m in models_to_try:
-                for attempt in range(2):
-                    try:
-                        response = client.models.generate_content(
-                            model=m,
-                            contents=full_prompt
-                        )
-                        if response and response.text:
-                            reply_text = response.text
-                            break
-                    except Exception as e:
-                        last_err = str(e)
-                        time.sleep(1)
-                if reply_text:
-                    break
-            
-            if reply_text:
-                st.markdown(reply_text)
-                st.session_state.thal_messages.append({"role": "assistant", "content": reply_text})
-            else:
-                st.error(f"तांत्रिक अडचण: {last_err}")
+            try:
+                full_prompt = f"[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
+                response = model.generate_content(full_prompt)
+                
+                if response and response.text:
+                    st.markdown(response.text)
+                    st.session_state.thal_messages.append({"role": "assistant", "content": response.text})
+                else:
+                    st.error("माहिती मिळवण्यात अडचण आली, कृपया पुन्हा प्रयत्न करा.")
+            except Exception as e:
+                st.error(f"तांत्रिक अडचण: {str(e)}")
 
-# ११. तळटीप ब्रँडिंग व अस्वीकरण
+# १०. तळटीप ब्रँडिंग व अस्वीकरण
 st.markdown(f"""
     <div class='footer-container'>
         <div class='brand-title'>{content["brand_title"]}</div>

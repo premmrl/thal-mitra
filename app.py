@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
 # १. पेज कॉन्फिगरेशन
 st.set_page_config(
@@ -49,7 +49,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ३. सर्व १० भाषांसाठी संपूर्ण स्थानिक भाषांतर
+# ३. सर्व १० भाषांसाठी स्थानिक भाषांतर
 LOCALIZATION = {
     "मराठी": {
         "badge": "🎯 मिशन थॅलेसेमिया मुक्त भारत २०३५",
@@ -184,7 +184,7 @@ LOCALIZATION = {
         "thinking": "തലസീമിയ മിത്ര വിവരങ്ങൾ ശേഖരിക്കുന്നു...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "സംയുക്ത സംരംഭം: <b>വിഘ്നഹർത്ത ഗോൾഡ് ഫൗണ്ടേഷൻ</b> & <b>Rotary Club of Pune Amanora</b><br>വെബ്സൈറ്റ്: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️ ഈ വിവരങ്ങൾ അവബോധത്തിന് മാത്രമുള്ളതാണ്. വൈദ്യോപദേശത്തിനായി ഡോക്ടറെ സമീപിക്കുക."
+        "disclaimer": "⚠️️ ഈ വിവരങ്ങൾ അവബോധത്തിന് മാത്രമുള്ളതാണ്. വൈദ്യോപദേശത്തിനായി ഡോക്ടറെ സമീപിക്കുക."
     },
     "ਪੰਜਾਬੀ (Punjabi)": {
         "badge": "🎯 ਮਿਸ਼ਨ ਥੈਲੇਸੀਮੀਆ ਮੁਕਤ ਭਾਰਤ 2035",
@@ -237,41 +237,44 @@ system_prompt = (
     "४. अधिकृत संकेतस्थळ: अधिक माहितीसाठी thalassemia.rcpamanora.org चा आवर्जून उल्लेख कर."
 )
 
-# ७. API कॉन्फिगरेशन
+# ७. क्लायंट सेटअप
 api_token = st.secrets.get("GEMINI_API_KEY", "").strip()
 
 if not api_token:
     st.info("कृपया Streamlit Secrets मध्ये GEMINI_API_KEY जोडा.", icon="ℹ️")
     st.stop()
 
-genai.configure(api_key=api_token)
+@st.cache_resource(show_spinner=False)
+def init_genai_client(key):
+    return genai.Client(api_key=key)
 
-# उपलब्ध मॉडेल शोधणारे व उत्तर देणारे सुरक्षित फंक्शन
-def call_gemini(user_query):
-    # खात्यावर उपलब्ध असलेली मॉडेल्स क्रमाने तपासून उत्तर मिळवणे
-    candidate_models = [
-        "gemini-pro",
-        "models/gemini-pro",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-pro-latest"
+client = init_genai_client(api_token)
+
+# ८. सुरक्षित प्रतिसाद फंक्शन
+def ask_thal_mitra(query):
+    models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-1.5-flash",
+        "gemini-2.0-flash"
     ]
+    prompt_with_context = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {query}"
     
-    full_prompt = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {user_query}"
-    
-    last_error = None
-    for mod in candidate_models:
+    last_err = None
+    for model_name in models_to_try:
         try:
-            m = genai.GenerativeModel(mod)
-            res = m.generate_content(full_prompt)
-            if res and res.text:
-                return res.text
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt_with_context
+            )
+            if response and response.text:
+                return response.text
         except Exception as e:
-            last_error = e
+            last_err = e
             continue
             
-    raise Exception(f"मॉडेल प्रतिसाद देऊ शकले नाही: {str(last_error)}")
+    raise Exception(f"मॉडेल प्रतिसाद देऊ शकले नाही: {str(last_err)}")
 
-# ८. चॅट हिस्ट्री
+# ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
     st.session_state.thal_messages = []
 
@@ -279,7 +282,7 @@ for message in st.session_state.thal_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# ९. प्रश्न हाताळणी
+# १०. प्रश्न हाताळणी
 if user_prompt := st.chat_input(content["input_placeholder"]):
     st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -288,13 +291,13 @@ if user_prompt := st.chat_input(content["input_placeholder"]):
     with st.chat_message("assistant"):
         with st.spinner(content["thinking"]):
             try:
-                reply = call_gemini(user_prompt)
+                reply = ask_thal_mitra(user_prompt)
                 st.markdown(reply)
                 st.session_state.thal_messages.append({"role": "assistant", "content": reply})
             except Exception as e:
                 st.error(f"तांत्रिक अडचण: {str(e)}")
 
-# १०. तळटीप ब्रँडिंग व अस्वीकरण
+# ११. तळटीप ब्रँडिंग व अस्वीकरण
 st.markdown(f"""
     <div class='footer-container'>
         <div class='brand-title'>{content["brand_title"]}</div>

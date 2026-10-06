@@ -94,7 +94,7 @@ LOCALIZATION = {
         "thinking": "ThalMitra is finding accurate facts...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "Joint Initiative: <b>Vighnaharta Gold Foundation</b> & <b>Rotary Club of Pune Amanora</b><br>Official Portal: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
+        "disclaimer": "⚠️️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
     },
     "ગુજરાતી (Gujarati)": {
         "badge": "🎯 મિશન થેલેસેમિયા મુક્ત ભારત ૨૦૩૫",
@@ -184,7 +184,7 @@ LOCALIZATION = {
         "thinking": "തലസീമിയ മിത്ര വിവരങ്ങൾ ശേഖരിക്കുന്നു...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "സംയുക്ത സംരംഭം: <b>വിഘ്നഹർത്ത ഗോൾഡ് ഫൗണ്ടേഷൻ</b> & <b>Rotary Club of Pune Amanora</b><br>വെബ്സൈറ്റ്: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️️ ഈ വിവരങ്ങൾ അവബോധത്തിന് മാത്രമുള്ളതാണ്. വൈദ്യോപദേശത്തിനായി ഡോക്ടറെ സമീപിക്കുക."
+        "disclaimer": "⚠️ ഈ വിവരങ്ങൾ അവബോധത്തിന് മാത്രമുള്ളതാണ്. വൈദ്യോപദേശത്തിനായി ഡോക്ടറെ സമീപിക്കുക."
     },
     "ਪੰਜਾਬੀ (Punjabi)": {
         "badge": "🎯 ਮਿਸ਼ਨ ਥੈਲੇਸੀਮੀਆ ਮੁਕਤ ਭਾਰਤ 2035",
@@ -250,12 +250,11 @@ def init_genai_client(key):
 
 client = init_genai_client(api_token)
 
-# ८. सुरक्षित प्रतिसाद फंक्शन
+# ८. Google ने सुचवलेले चालू मॉडेल
 def ask_thal_mitra(query):
     models_to_try = [
-        "gemini-2.5-flash",
-        "gemini-1.5-flash",
-        "gemini-2.0-flash"
+        "gemini-3.8-flash",
+        "gemini-2.5-flash"
     ]
     prompt_with_context = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {query}"
     

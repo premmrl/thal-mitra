@@ -1,5 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
+import json
 
 # १. पेज कॉन्फिगरेशन
 st.set_page_config(
@@ -8,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# २. आधुनिक CSS स्टाईल
+# २. आधुनिक CSS स्टाईल (रेड-गोल्ड जनजागृती थीम)
 st.markdown("""
     <style>
     .footer-container {
@@ -109,7 +110,7 @@ LOCALIZATION = {
         "thinking": "થેલેસેમિયા મિત્ર માહિતી તપાસી રહ્યા છે...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "સંયુક્ત પહેલ: <b>વિઘ્નહર્તા ગોલ્ડ ફાઉન્ડેશન</b> અને <b>Rotary Club of Pune Amanora</b><br>વેબસાઇટ: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️️ આ માહિતી માત્ર જાગૃતિ અને શિક્ષણ માટે છે. તબીબી સલાહ માટે નિષ્ણાત ડૉક્ટરનો સંપર્ક કરવો."
+        "disclaimer": "⚠️ આ માહિતી માત્ર જાગૃતિ અને શિક્ષણ માટે છે. તબીબી સલાહ માટે નિષ્ણાત ડૉક્ટરનો સંપર્ક કરવો."
     },
     "ಕನ್ನಡ (Kannada)": {
         "badge": "🎯 ಮಿಷನ್ ಥಲಸ್ಸೆಮಿಯಾ ಮುಕ್ತ ಭಾರತ 2035",
@@ -235,27 +236,60 @@ SYSTEM_INSTRUCTION = f"""
 
 महत्त्वाचे वैज्ञानिक नियम:
 १. संपूर्ण उत्तर १००% शुद्ध व सहज समजणाऱ्या {language} भाषेतच दे.
-२. आदरार्थी आणि संवेदनशील भाषा वापर.
+२. आदरार्थी, संवेदनशील आणि मित्रासारखी स्पष्ट भाषा वापर.
 ३. वैज्ञानिक तथ्ये:
-   - थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती निरोगी आयुष्य जगू शकते.
-   - केवळ दोन मायनर व्यक्तींचे लग्न झाल्यास बाळाला २५% मेजर होण्याचा धोका असतो.
-   - लग्नाआधी प्रत्येकाने CBC आणि Hb Electrophoresis / HPLC टेस्ट करावी.
-४. अधिकृत संकेतस्थळ: thalassemia.rcpamanora.org चा संदर्भ दे.
+   - थॅलेसेमिया मायनर (Carrier) हा आजार नाही; व्यक्ती सामान्य, निरोगी आयुष्य जगू शकते आणि लग्न करू शकते.
+   - केवळ दोन मायनर व्यक्तींचे लग्न झाल्यास बाळाला २५% मेजर (गंभीर आजार) होण्याचा धोका असतो.
+   - लग्नाआधी प्रत्येकाने CBC (यात MCV < 80, MCH < 27) आणि Hb Electrophoresis / HPLC टेस्ट करावी.
+४. अधिकृत संकेतस्थळ: अधिक माहितीसाठी thalassemia.rcpamanora.org चा आवर्जून उल्लेख कर.
 """
 
-# ७. API Key आणि Client कॉन्फिगरेशन
-api_key = st.secrets.get("GEMINI_API_KEY", None)
-if not api_key:
-    st.info("कृपया API Key जोडा.", icon="ℹ️")
+# ७. API Key / OAuth Token मिळवणे
+api_token = st.secrets.get("GEMINI_API_KEY", "").strip()
+
+if not api_token:
+    st.info("कृपया Streamlit Secrets मध्ये API Key जोडा.", icon="ℹ️")
     st.stop()
 
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    system_instruction=SYSTEM_INSTRUCTION
-)
+# ८. AQ आणि Bearer Token थेट चालवणारे API फंक्शन
+def generate_response(prompt_text):
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    
+    # जर की AQ ने सुरू होत असेल तर Bearer Token म्हणून पाठवा, अन्यथा API Key पॅरामीटर
+    if api_token.startswith("AQ.") or api_token.startswith("ya29."):
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_token}"
+        }
+        endpoint = url
+    else:
+        headers = {"Content-Type": "application/json"}
+        endpoint = f"{url}?key={api_token}"
+        
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{SYSTEM_INSTRUCTION}\n\n[विभाग: {selected_mode}]\nप्रश्न: {prompt_text}"}
+                ]
+            }
+        ]
+    }
+    
+    res = requests.post(endpoint, headers=headers, json=payload, timeout=40)
+    
+    if res.status_code == 200:
+        data = res.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        try:
+            err_data = res.json()
+            err_msg = err_data.get("error", {}).get("message", res.text)
+        except Exception:
+            err_msg = res.text
+        raise Exception(f"त्रुटी ({res.status_code}): {err_msg}")
 
-# ८. चॅट हिस्ट्री
+# ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
     st.session_state.thal_messages = []
 
@@ -263,7 +297,7 @@ for message in st.session_state.thal_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# ९. प्रश्न हाताळणी
+# १०. प्रश्न हाताळणी
 if user_prompt := st.chat_input(content["input_placeholder"]):
     st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -272,18 +306,13 @@ if user_prompt := st.chat_input(content["input_placeholder"]):
     with st.chat_message("assistant"):
         with st.spinner(content["thinking"]):
             try:
-                full_prompt = f"[विभाग: {selected_mode}]\nप्रश्न: {user_prompt}"
-                response = model.generate_content(full_prompt)
-                
-                if response and response.text:
-                    st.markdown(response.text)
-                    st.session_state.thal_messages.append({"role": "assistant", "content": response.text})
-                else:
-                    st.error("उत्तर मिळण्यात अडचण आली, कृपया पुन्हा प्रयत्न करा.")
+                reply = generate_response(user_prompt)
+                st.markdown(reply)
+                st.session_state.thal_messages.append({"role": "assistant", "content": reply})
             except Exception as e:
                 st.error(f"तांत्रिक अडचण: {str(e)}")
 
-# १०. तळटीप ब्रँडिंग व अस्वीकरण
+# ११. तळटीप ब्रँडिंग व अस्वीकरण
 st.markdown(f"""
     <div class='footer-container'>
         <div class='brand-title'>{content["brand_title"]}</div>

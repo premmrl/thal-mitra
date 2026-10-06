@@ -94,7 +94,7 @@ LOCALIZATION = {
         "thinking": "ThalMitra is finding accurate facts...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
         "brand_desc": "Joint Initiative: <b>Vighnaharta Gold Foundation</b> & <b>Rotary Club of Pune Amanora</b><br>Official Portal: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
-        "disclaimer": "⚠️️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
+        "disclaimer": "⚠️ For educational and awareness purposes only. Consult a certified medical practitioner/hematologist for medical diagnosis."
     },
     "ગુજરાતી (Gujarati)": {
         "badge": "🎯 મિશન થેલેસેમિયા મુક્ત ભારત ૨૦૩૫",
@@ -250,28 +250,16 @@ def init_genai_client(key):
 
 client = init_genai_client(api_token)
 
-# ८. Google ने सुचवलेले चालू मॉडेल
+# ८. Google चे अधिकृत चालू मॉडेल (gemini-3.8-flash)
 def ask_thal_mitra(query):
-    models_to_try = [
-        "gemini-3.8-flash",
-        "gemini-2.5-flash"
-    ]
     prompt_with_context = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {query}"
-    
-    last_err = None
-    for model_name in models_to_try:
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt_with_context
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_err = e
-            continue
-            
-    raise Exception(f"मॉडेल प्रतिसाद देऊ शकले नाही: {str(last_err)}")
+    response = client.models.generate_content(
+        model="gemini-3.8-flash",
+        contents=prompt_with_context
+    )
+    if response and response.text:
+        return response.text
+    raise Exception("मॉडेलकडून कोणताही प्रतिसाद मिळाला नाही.")
 
 # ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:

@@ -1,14 +1,16 @@
 import streamlit as st
+import time
 from google import genai
+from google.genai import errors
 
-# १. पेज कॉन्फिगरेशन
+# १. पेज कॉन्फ़िगरेशन
 st.set_page_config(
     page_title="थॅलेसेमिया मित्र | ThalMitra AI",
     page_icon="🩸",
     layout="centered"
 )
 
-# २. CSS स्टाईल
+# २. CSS स्टाइल
 st.markdown("""
     <style>
     .footer-container {
@@ -118,7 +120,7 @@ LOCALIZATION = {
         ],
         "input_placeholder": "ಥಲಸ್ಸೆಮಿಯಾ ಅಥವಾ ರಕ್ತ ಪರೀಕ್ಷೆಯ ಬಗ್ಗೆ ಕೇಳಿ...",
         "brand_title": "MISSION THALASSEMIA FREE INDIA 2035",
-        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
+        "brand_desc": "ಜಂಟಿ ಉಪಕ್ರಮ: <b>ವಿಘ್ನಹರ್ತಾ ಗೋಲ್ಡ್ ಫೌಂಡೇಶನ್</b> ಮತ್ತು <b>Rotary Club of Pune Amanora</b><br>ವೆಬ್‌ಸೈಟ್: <a href='https://thalassemia.rcpamanora.org/' target='_blank' style='color:#ff6b6b;'>thalassemia.rcpamanora.org</a>",
         "disclaimer": "⚠️ ಈ ಮಾಹಿತಿಯು ಕೇವಲ ಜಾಗೃತಿಗಾಗಿ ಮಾತ್ರ. ವೈದ್ಯಕೀಯ ಸಲಹೆಗಾಗಿ ತಜ್ಞ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ."
     },
     "తెలుగు (Telugu)": {
@@ -240,16 +242,36 @@ def init_genai_client(key):
 
 client = init_genai_client(api_token)
 
-# ८. वेगाने स्ट्रीमिंग करून उत्तर देणे
+# ८. मल्टी-मॉडल फॉलबॅक व ऑटो-रीट्राय (५०३ ओव्हरलोड टाळण्यासाठी)
 def stream_thal_mitra(query):
     prompt_with_context = f"{system_prompt}\n\n[विभाग: {selected_mode}]\nप्रश्न: {query}"
-    response_stream = client.models.generate_content_stream(
-        model="gemini-3.8-flash",
-        contents=prompt_with_context
+    
+    # 503 लोड टाळण्यासाठी पर्यायी मॉडेल्स
+    models = ["gemini-3.8-flash", "gemini-3.8-pro", "gemini-pro"]
+    
+    last_error = None
+    for model_name in models:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_with_context
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                last_error = e
+                # 503 लोड असल्यास 1 सेकंद थांबून प्रयत्न
+                if "503" in str(e) or "UNAVAILABLE" in str(e):
+                    time.sleep(1)
+                    continue
+                break
+                
+    # जर Google चे सर्व सर्व्हर क्षणिक लोडवर असतील तर क्रैश न होता नम्र संदेश देणे
+    return (
+        "⚠️ गुगल सर्व्हरवर सध्या तात्पुरता अतिरिक्त लोड (503 High Demand) आला आहे. "
+        "तुमचा प्रश्न सुरक्षित आहे, कृपया ५-१० सेकंदांनंतर पुन्हा विचारा."
     )
-    for chunk in response_stream:
-        if chunk.text:
-            yield chunk.text
 
 # ९. चॅट हिस्ट्री
 if "thal_messages" not in st.session_state:
@@ -259,18 +281,17 @@ for message in st.session_state.thal_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# १०. थेट व तात्काळ प्रतिसाद हाताळणी
+# १०. थेट प्रश्न हाताळणी
 if user_prompt := st.chat_input(content["input_placeholder"]):
     st.session_state.thal_messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
     with st.chat_message("assistant"):
-        try:
-            full_response = st.write_stream(stream_thal_mitra(user_prompt))
-            st.session_state.thal_messages.append({"role": "assistant", "content": full_response})
-        except Exception as e:
-            st.error(f"तांत्रिक अडचण: {str(e)}")
+        with st.spinner("थॅलेसेमिया मित्र माहिती पडताळत आहे..."):
+            reply = stream_thal_mitra(user_prompt)
+            st.markdown(reply)
+            st.session_state.thal_messages.append({"role": "assistant", "content": reply})
 
 # ११. तळटीप ब्रँडिंग व अस्वीकरण
 st.markdown(f"""
